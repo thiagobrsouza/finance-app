@@ -116,6 +116,7 @@ model Account {
   transfersFrom        Transfer[] @relation("transfersFrom")
   transfersTo          Transfer[] @relation("transfersTo")
   invoicesPaidFromThis Invoice[]
+  recurringRules       RecurringRule[]
 }
 
 model AccountBalanceSnapshot {
@@ -142,8 +143,9 @@ model CreditCard {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  invoices     Invoice[]
-  transactions Transaction[]
+  invoices       Invoice[]
+  transactions   Transaction[]
+  recurringRules RecurringRule[]
 }
 
 model Invoice {
@@ -177,7 +179,8 @@ model Category {
   user     User?      @relation(fields: [userId], references: [id])
   isSeeded Boolean    @default(false)
 
-  transactions Transaction[]
+  transactions   Transaction[]
+  recurringRules RecurringRule[]
 }
 
 model PaymentMethod {
@@ -186,7 +189,8 @@ model PaymentMethod {
   slug                String  @unique
   requiresCreditCard  Boolean @default(false)
 
-  transactions Transaction[]
+  transactions   Transaction[]
+  recurringRules RecurringRule[]
 }
 
 model Transaction {
@@ -224,6 +228,15 @@ model RecurringRule {
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   description     String
   amount          Decimal  @db.Decimal(14, 2)
+  type            TransactionType
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id])
+  paymentMethodId String
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  accountId       String?
+  account         Account? @relation(fields: [accountId], references: [id])
+  creditCardId    String?
+  creditCard      CreditCard? @relation(fields: [creditCardId], references: [id])
   dayOfMonth      Int
   startDate       DateTime @db.Date
   endDate         DateTime? @db.Date
