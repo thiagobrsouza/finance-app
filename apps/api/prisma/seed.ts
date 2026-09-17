@@ -5,24 +5,28 @@ const prisma = new PrismaClient();
 
 async function main() {
   for (const name of SEEDED_CATEGORIES) {
-    await prisma.category.upsert({
-      where: { id: `seed-category-${name}` },
-      update: {},
-      create: { id: `seed-category-${name}`, name, isSeeded: true },
+    const existing = await prisma.category.findFirst({
+      where: { name, isSeeded: true, parentId: null },
     });
+    if (!existing) {
+      await prisma.category.create({ data: { name, isSeeded: true } });
+    }
   }
 
   for (const institution of SEEDED_INSTITUTIONS) {
-    await prisma.financialInstitution.upsert({
-      where: { id: `seed-institution-${institution.name}` },
-      update: { domain: institution.domain },
-      create: {
-        id: `seed-institution-${institution.name}`,
-        name: institution.name,
-        domain: institution.domain,
-        isSeeded: true,
-      },
+    const existing = await prisma.financialInstitution.findFirst({
+      where: { name: institution.name, isSeeded: true },
     });
+    if (existing) {
+      await prisma.financialInstitution.update({
+        where: { id: existing.id },
+        data: { domain: institution.domain },
+      });
+    } else {
+      await prisma.financialInstitution.create({
+        data: { name: institution.name, domain: institution.domain, isSeeded: true },
+      });
+    }
   }
 
   for (const method of PAYMENT_METHODS) {
