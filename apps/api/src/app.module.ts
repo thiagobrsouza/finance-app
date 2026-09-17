@@ -9,6 +9,7 @@ import { AccountsModule } from "./accounts/accounts.module";
 import { CreditCardsModule } from "./credit-cards/credit-cards.module";
 import { TransactionsModule } from "./transactions/transactions.module";
 import { ReportsModule } from "./reports/reports.module";
+import { ImportsModule } from "./imports/imports.module";
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ReportsModule } from "./reports/reports.module";
     CreditCardsModule,
     TransactionsModule,
     ReportsModule,
+    ImportsModule,
   ],
   controllers: [],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
