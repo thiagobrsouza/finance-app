@@ -5,6 +5,7 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { MailModule } from "./mail/mail.module";
 import { AuthModule } from "./auth/auth.module";
 import { AccountsModule } from "./accounts/accounts.module";
+import { CreditCardsModule } from "./credit-cards/credit-cards.module";
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { AccountsModule } from "./accounts/accounts.module";
     MailModule,
     AuthModule,
     AccountsModule,
+    CreditCardsModule,
   ],
   controllers: [],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
