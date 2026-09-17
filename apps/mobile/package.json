@@ -1,0 +1,25 @@
+{
+  "name": "mobile",
+  "version": "0.0.0",
+  "private": true,
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "dev": "expo start",
+    "build": "expo export",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@finance-app/shared": "workspace:*",
+    "@tanstack/react-query": "^5.55.0",
+    "expo": "~51.0.0",
+    "expo-notifications": "~0.28.0",
+    "react": "18.2.0",
+    "react-native": "0.74.5",
+    "react-hook-form": "^7.53.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "typescript": "^5.5.0"
+  }
+}

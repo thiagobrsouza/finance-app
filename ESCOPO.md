@@ -116,6 +116,7 @@
   - Warren
   - XP Investimentos
 - Se não existir na lista, o usuário pode cadastrar e importar um ícone do banco
+- As instituições financeiras devem exibir seus ícones/logos na lista para facilitar a identificação visual (adicionado em 2026-09-17)
 
 ## Interface
 - A interface deve ser simples e responsiva

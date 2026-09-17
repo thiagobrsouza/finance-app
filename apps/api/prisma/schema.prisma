@@ -1,0 +1,259 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ThemePreference {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+enum AuthTokenType {
+  SIGNUP
+  LOGIN_MFA
+  PASSWORD_RESET
+}
+
+enum AccountType {
+  CORRENTE
+  POUPANCA
+  CARTEIRA
+}
+
+enum InvoiceStatus {
+  OPEN
+  CLOSED
+  PAID
+  OVERDUE
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+model User {
+  id              String          @id @default(uuid())
+  firstName       String
+  lastName        String
+  email           String          @unique
+  passwordHash    String
+  themePreference ThemePreference @default(SYSTEM)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  authTokens    AuthToken[]
+  refreshTokens RefreshToken[]
+  accounts      Account[]
+  creditCards   CreditCard[]
+  transactions  Transaction[]
+  transfers     Transfer[]
+  categories    Category[]
+  institutions  FinancialInstitution[]
+  recurringRules   RecurringRule[]
+  installmentGroups InstallmentGroup[]
+}
+
+model AuthToken {
+  id        String        @id @default(uuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      AuthTokenType
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int           @default(0)
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  userAgent String?
+  ip        String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model FinancialInstitution {
+  id               String   @id @default(uuid())
+  name             String
+  domain           String?
+  iconUrl          String?
+  isSeeded         Boolean  @default(false)
+  createdByUserId  String?
+  createdByUser    User?    @relation(fields: [createdByUserId], references: [id])
+
+  accounts    Account[]
+  creditCards CreditCard[]
+}
+
+model Account {
+  id              String       @id @default(uuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  institutionId   String
+  institution     FinancialInstitution @relation(fields: [institutionId], references: [id])
+  type            AccountType
+  initialBalance  Decimal      @default(0) @db.Decimal(14, 2)
+  currentBalance  Decimal      @default(0) @db.Decimal(14, 2)
+  archivedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  balanceHistory      AccountBalanceSnapshot[]
+  transactions        Transaction[]
+  transfersFrom        Transfer[] @relation("transfersFrom")
+  transfersTo          Transfer[] @relation("transfersTo")
+  invoicesPaidFromThis Invoice[]
+}
+
+model AccountBalanceSnapshot {
+  id           String   @id @default(uuid())
+  accountId    String
+  account      Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  balance      Decimal  @db.Decimal(14, 2)
+  snapshotDate DateTime @db.Date
+
+  @@unique([accountId, snapshotDate])
+}
+
+model CreditCard {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  institutionId String
+  institution   FinancialInstitution @relation(fields: [institutionId], references: [id])
+  limit         Decimal  @db.Decimal(14, 2)
+  closingDay    Int
+  dueDay        Int
+  archivedAt    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  invoices     Invoice[]
+  transactions Transaction[]
+}
+
+model Invoice {
+  id               String        @id @default(uuid())
+  creditCardId     String
+  creditCard       CreditCard    @relation(fields: [creditCardId], references: [id], onDelete: Cascade)
+  referenceMonth   String
+  closingDate      DateTime      @db.Date
+  dueDate          DateTime      @db.Date
+  status           InvoiceStatus @default(OPEN)
+  totalAmount      Decimal       @default(0) @db.Decimal(14, 2)
+  paidAmount       Decimal       @default(0) @db.Decimal(14, 2)
+  paidAt           DateTime?
+  paidFromAccountId String?
+  paidFromAccount  Account?      @relation(fields: [paidFromAccountId], references: [id])
+
+  transactions Transaction[]
+
+  @@unique([creditCardId, referenceMonth])
+}
+
+model Category {
+  id       String     @id @default(uuid())
+  name     String
+  icon     String?
+  color    String?
+  parentId String?
+  parent   Category?  @relation("CategoryToSubcategory", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryToSubcategory")
+  userId   String?
+  user     User?      @relation(fields: [userId], references: [id])
+  isSeeded Boolean    @default(false)
+
+  transactions Transaction[]
+}
+
+model PaymentMethod {
+  id                  String  @id @default(uuid())
+  name                String
+  slug                String  @unique
+  requiresCreditCard  Boolean @default(false)
+
+  transactions Transaction[]
+}
+
+model Transaction {
+  id                  String            @id @default(uuid())
+  userId              String
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId           String?
+  account              Account?          @relation(fields: [accountId], references: [id])
+  creditCardId         String?
+  creditCard           CreditCard?       @relation(fields: [creditCardId], references: [id])
+  invoiceId            String?
+  invoice              Invoice?          @relation(fields: [invoiceId], references: [id])
+  categoryId           String
+  category              Category          @relation(fields: [categoryId], references: [id])
+  paymentMethodId       String
+  paymentMethod         PaymentMethod     @relation(fields: [paymentMethodId], references: [id])
+  type                 TransactionType
+  description          String
+  amount               Decimal           @db.Decimal(14, 2)
+  date                 DateTime          @db.Date
+  isRecurring          Boolean           @default(false)
+  recurringRuleId      String?
+  recurringRule         RecurringRule?    @relation(fields: [recurringRuleId], references: [id])
+  installmentGroupId    String?
+  installmentGroup      InstallmentGroup? @relation(fields: [installmentGroupId], references: [id])
+  installmentNumber     Int?
+  ignoreInReports       Boolean           @default(false)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+}
+
+model RecurringRule {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  description     String
+  amount          Decimal  @db.Decimal(14, 2)
+  dayOfMonth      Int
+  startDate       DateTime @db.Date
+  endDate         DateTime? @db.Date
+  active          Boolean  @default(true)
+  nextRunDate     DateTime @db.Date
+
+  transactions Transaction[]
+}
+
+model InstallmentGroup {
+  id                   String   @id @default(uuid())
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  description          String
+  totalAmount          Decimal  @db.Decimal(14, 2)
+  installmentCount     Int
+  firstInstallmentDate DateTime @db.Date
+
+  transactions Transaction[]
+}
+
+model Transfer {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fromAccountId String
+  fromAccount   Account  @relation("transfersFrom", fields: [fromAccountId], references: [id])
+  toAccountId   String
+  toAccount     Account  @relation("transfersTo", fields: [toAccountId], references: [id])
+  amount        Decimal  @db.Decimal(14, 2)
+  date          DateTime @db.Date
+  description   String?
+  createdAt     DateTime @default(now())
+}
