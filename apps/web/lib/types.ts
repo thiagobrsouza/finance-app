@@ -82,6 +82,7 @@ export interface Category {
   icon: string | null;
   color: string | null;
   parentId: string | null;
+  isSeeded: boolean;
   children?: Category[];
 }
 
