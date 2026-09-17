@@ -6,6 +6,7 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { MailModule } from "./mail/mail.module";
 import { AuthModule } from "./auth/auth.module";
 import { AccountsModule } from "./accounts/accounts.module";
+import { InstitutionsModule } from "./institutions/institutions.module";
 import { CreditCardsModule } from "./credit-cards/credit-cards.module";
 import { TransactionsModule } from "./transactions/transactions.module";
 import { ReportsModule } from "./reports/reports.module";
@@ -21,6 +22,7 @@ import { ImportsModule } from "./imports/imports.module";
     MailModule,
     AuthModule,
     AccountsModule,
+    InstitutionsModule,
     CreditCardsModule,
     TransactionsModule,
     ReportsModule,
