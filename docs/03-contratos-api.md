@@ -15,8 +15,10 @@
 | POST | `/auth/logout` | não | revoga o refresh token atual |
 | POST | `/auth/forgot-password` | sim | `{ email }` → dispara token de reset (5 min) |
 | POST | `/auth/reset-password` | sim | `{ token, password, passwordConfirmation }` → troca senha e revoga todas as sessões |
-| POST | `/auth/change-password` | não | `{ currentPassword }` → dispara mesmo fluxo de token do reset, autenticado |
+| POST | `/auth/change-password` | não | sem corpo — dispara o mesmo fluxo de e-mail do "esqueci a senha" para o próprio usuário autenticado (conforme o escopo: não pede a senha atual) |
 | GET | `/auth/me` | não | retorna perfil do usuário logado |
+
+Rate limit (`@nestjs/throttler`) aplicado em `/auth/login` (5/min), `/auth/login/verify-mfa` (10/min) e `/auth/forgot-password` (5/min) por IP, além do limite global de 100 req/min. `login`, `forgot-password` e `change-password` sempre retornam mensagem genérica de sucesso/erro (sem revelar se o e-mail existe) para evitar enumeração de contas.
 
 ## Users
 

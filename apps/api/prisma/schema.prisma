@@ -42,7 +42,8 @@ model User {
   firstName       String
   lastName        String
   email           String          @unique
-  passwordHash    String
+  passwordHash    String?
+  activatedAt     DateTime?
   themePreference ThemePreference @default(SYSTEM)
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
