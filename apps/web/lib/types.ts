@@ -111,3 +111,20 @@ export interface Transaction {
   category?: Category;
   paymentMethod?: PaymentMethod;
 }
+
+export interface CategoryTotal {
+  categoryId: string;
+  categoryName: string;
+  total: number;
+}
+
+export interface PeriodTotals {
+  month: string;
+  income: number;
+  expense: number;
+}
+
+export interface ComparisonReport {
+  current: PeriodTotals;
+  previous: PeriodTotals;
+}
