@@ -86,4 +86,35 @@ export const api = {
     request<T>(path, { ...options, method: "POST", body }),
   patch: <T>(path: string, body?: unknown) => request<T>(path, { method: "PATCH", body }),
   delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
+  upload: <T>(path: string, file: File) => uploadRequest<T>(path, file),
 };
+
+/** Upload multipart — não passa pelo `request()` porque o Content-Type (com boundary) precisa ser definido pelo próprio navegador. */
+async function uploadRequest<T>(path: string, file: File, isRetry = false): Promise<T> {
+  const { accessToken } = useAuthStore.getState();
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+    body: formData,
+  });
+
+  if (response.status === 401 && !isRetry) {
+    const refreshed = await tryRefresh();
+    if (refreshed) {
+      return uploadRequest<T>(path, file, true);
+    }
+    useAuthStore.getState().clear();
+  }
+
+  const data = await parseBody(response);
+
+  if (!response.ok) {
+    const message = (data && typeof data === "object" && "message" in data ? String((data as { message: unknown }).message) : null) ?? "Erro inesperado";
+    throw new ApiError(message, response.status, data);
+  }
+
+  return data as T;
+}

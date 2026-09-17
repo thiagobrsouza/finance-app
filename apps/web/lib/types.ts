@@ -128,3 +128,19 @@ export interface ComparisonReport {
   current: PeriodTotals;
   previous: PeriodTotals;
 }
+
+export interface ImportPreviewRow {
+  index: number;
+  date: string;
+  description: string;
+  amount: number;
+  type: "INCOME" | "EXPENSE";
+}
+
+export interface ImportPreview {
+  previewId: string;
+  fileName: string;
+  format: string;
+  transactions: ImportPreviewRow[];
+  warnings: string[];
+}
